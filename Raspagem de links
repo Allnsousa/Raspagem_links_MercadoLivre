@@ -1,0 +1,112 @@
+#Como vai funcionar meu programa?
+'''
+1 - Preparar uma listra com links que o programa vai ler, no caso basta pegar uma lista de sku e ir ubstituindo a parte correspondente do texto
+
+2 - O programa vai pegar o primeiro link, acessa-lo e pegar todos os links do anúncios assim como as guestões de pesquisa, vai pular para a proxima página e repetir a operação,
+    quando não houver mais páginas, o programa deve trocar de link e repetir o processo
+
+3 - Todos os links serão salvos em um arquivo de texto próprio
+
+---------------- 2º PARTE (Coleta de Dados - Full Soup)---------------------
+
+4 - Ao terminar de obter todos os links, o prorama fará uma nova raspagem, dessa vez irá acessar o arquivo de texto contendo os links salvos na iteração anteriror.
+ao acessar CADA UM dos links, salvaremos os atributos das informações que queremos, sendo eles: TÍTULO, PREÇO, SEM JUROS?, QUANTIDADES DE ITENS VENDIDAS, MARCA, SKU DESCRIÇÃO, LOJA
+
+5 - Salvamos as informações em um arquivo de texto, separando as informações do item com um ; e pulando uma linha para o próximo item
+
+
+'''
+
+from bs4 import BeautifulSoup
+import requests
+import urllib.request
+import time
+
+#Abrimos/criamos nosso arquivo de texto para gravar os links
+file = open("LINKS.txt","w")
+
+#Definimos o link
+ML_LINK = ["Cole o link das pesquisas aqui"]
+#Dizemos ao driver pra ir até o link
+indice = 0
+
+#Criamos uma função com nome pequeno e atribuimos as informações para a biblioteca funcionar
+#abrimos nossa lista que irá receber os links
+links = {}
+
+
+#Aqui nós pedimos para procurar dentro de cada índice do código html os atributos definidos abaixo
+#No código fonte da página a classe referente aos links é o "a"
+#A seguir cada link é gravado em uma linha diferente no arquivo de texto gerado
+def encontrar_anuncios (link):
+  
+
+    #for anuncio in link:
+        
+        
+#pedimos a biblioteca requests que acesse o links
+    req = requests.get(link)
+    
+##Agora comçamos a sopa, passamos o código html do link e parseamos
+    soup = BeautifulSoup(req.text,'html.parser')
+    
+#Definimos qual a tag e a classe das informações que precisamos
+    codigo_pagina = soup.find_all("div", class_="ui-search-result__image")
+
+
+        
+#criamos uma variavel pra contar os número de anúncios na página
+    
+
+    contador = len(codigo_pagina)-1
+        
+#Definimos que enquanto o contador não for maior maior ou igual 0
+#iremos coletar os links    
+    while contador >= 0:
+    
+        links[contador] = codigo_pagina[contador].find("a")['href']
+        file.write(str(links[contador]) + "\n")
+        contador = contador-1
+            
+        
+      
+#vamos tentar ir para a próxima página
+    
+
+    try:
+        next_page = soup.find("li", class_="andes-pagination__button andes-pagination__button--next")
+        paginacao = next_page.find("a")['href']
+        print("ENTRANDO NA PRÓXIMA PESQUISA")
+            #print(anuncio)
+        print(paginacao)
+        encontrar_anuncios(paginacao) 
+            
+                  
+
+    except:
+        print("Prox Pesquisa") 
+        
+        global indice
+        
+        if len(ML_LINK)-1 == indice :
+            return None
+        else:
+            indice += 1
+            encontrar_anuncios(ML_LINK[indice])
+    
+
+        
+
+encontrar_anuncios(ML_LINK[indice])
+
+print("CHEGAMOS AO FIM SEM NENHUM ERRO!")
+file.close()
+
+
+    
+        
+        
+
+
+
+
