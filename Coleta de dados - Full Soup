@@ -1,0 +1,135 @@
+from bs4 import BeautifulSoup
+import requests
+import urllib.request
+import time
+
+#Abrimos o arquivo contendo os links e o arquivo onde adicionaremos as informações coletadas
+
+file = open("LINKS.txt","r")
+dados = open("Anuncios .txt", "w")
+contador_de_links = 0
+#Abrimos um for que irá acessar cada link do arquivo
+for link in file:
+        
+        #printamos o o número do link da ieração para controle
+        print(contador_de_links)
+        
+        S
+        #pedimos a biblioteca requests que acesse o links
+        req = requests.get(link)
+        
+        #Agora comçamos a sopa, passamos o código html do link e parseamos
+        soup = BeautifulSoup(req.text, 'html.parser')
+        
+
+        #Usamos Try pois nem sempre o Soup filtra como texto
+        try:
+                vendas = soup.find("span", {'class':'ui-pdp-subtitle'}).get_text()
+                if vendas == "Novo":
+                        contador_de_links += 1
+                        continue
+        except:
+                continue
+        
+        try:
+                titulo = soup.find("h1", {'class':'ui-pdp-title'}).get_text()
+        except:
+
+                try:
+                    titulo = soup.find("h1", {'class':'ui-pdp-title'})
+                except:
+                        titulo = "Provavelmente anúncio excluido"
+                
+        try:
+                preço = soup.find("meta", itemprop="price")
+                preço2 = preço.get('content')
+                preço = preço2[:16] + preço2[21:]
+        except:
+                pass
+        
+        try:
+                tipo_anuncio = soup.find("p", {'ui-pdp-color--GREEN ui-pdp-size--MEDIUM ui-pdp-family--REGULAR'})
+                
+                if len(str(tipo_anuncio)) > 20:
+                        tipo_anuncio = "premium"
+                else:
+                        tipo_anuncio = "classico"
+                
+        except:
+                tipo_anuncio = "classico"
+
+      
+        if preço == "" or preço == " ":
+                preço = "Provavelmente anúncio excluido" 
+                             
+        
+        try :
+                quantidade_estoque = soup.find("span", {'class':'ui-pdp-buybox__quantity__available'}).get_text()
+                if quantidade_estoque == "" or quantidade_estoque == " " or quantidade_estoque == "None":
+                        quantidade_estoque = "0"
+        except:
+                
+                try:
+                        quantidade_estoque = soup.find("span", {'class':'ui-pdp-buybox__quantity__available'})
+                        if quantidade_estoque == "" or quantidade_estoque == " " or quantidade_estoque == "None":
+                            quantidade_estoque = "0"
+                except:
+                        quantidade_estoque = "0"
+
+        try:
+                best_seller = soup.find("a", {'class':'ui-pdp-promotions-pill-label__target'})['href']
+        except:
+                best_seller = "none"
+
+
+        try:
+                loja1 = soup.find("a", {'class':'ui-pdp-media__action ui-box-component__action'})['href']
+        
+                len_do_link = len(loja1)- 13
+                loja = str(loja1[35:len_do_link])
+        
+        except:
+
+                loja = "nothing"
+        caract = ""
+        link_categoria = ""
+        categoria = soup.find_all("a", {'class':'andes-breadcrumb__link'})
+        for i in categoria:
+                link_categoria += i.get_text()
+                link_categoria += ";"
+        
+        #ATT Agora nós verificamos se o começo do texto é igual a coluna de uma informação que não queremos
+        #Caso não começe com os caracteres da pesquisa, pegamos a informação e gravamos na variavel
+        caracteristicas = soup.find_all("tr", {'andes-table__row'})
+        for i in caracteristicas:
+                um = i.get_text()
+                
+                if "Número de peça" not in um:
+                     pass          
+                else:
+                    if um == "":
+                        caract = "sem sku"
+                    else:
+                        caract = um
+                        break
+                        
+        
+        #Criamos um dicionário para organizar os dados e juntalos todos em uma linha
+        #a lista é zerada a cada iteração
+        lista = ""
+        lista = str(link[:len(link)-2]) + ";" + str(loja) + ";" + str(caract[14:]) + ";" + str(titulo) + ";" + \
+        str(preço) + ";" + str(vendas[9:12]) + ";" + str(quantidade_estoque) + ";" + str(best_seller) + ";" + "Tipo Anuncio: " + str(tipo_anuncio) + \
+        ";" + str(link_categoria)
+        
+             
+        #escrevemos a entrada do dicionário e pulamos para a próxima linha
+        dados.write(lista + "\n")
+        #print(lista)
+        contador_de_links += 1
+
+
+#Escrevemos no arquivo a hora que terminamos
+#Fechamos os arquivos e chegamos ao fim do código
+print("Chegamos ao fim :)")
+file.close()
+dados.close()
